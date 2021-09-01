@@ -34,7 +34,7 @@ results <- foreach(i=1:SIMS, .export=c('gmse'), .packages='GMSE') %dopar% {
 yhi = ceiling(max(unlist(lapply(results, function(x) max(gmse_summary(x)$resource[,2]))))*1.1)
 ylo = floor(min(unlist(lapply(results, function(x) min(gmse_summary(x)$resource[,2]))))*0.9)
 
-par(mfrow=c(1,2))
+par(mfrow=c(1,1))
 plot(1:YRS, 1:YRS, ylim = c(ylo,yhi), type = "n")
 lapply(results, function(x) lines(gmse_summary(x)$resource[,2]))
 
