@@ -30,8 +30,11 @@ gmse_sims = function(sims = 1, yrs = 10, save_all = FALSE, save_resXY = TRUE, sa
                   CONSUME_SURV = 0, CONSUME_REPR = 0, TIMES_FEEDING = 1, REMOVE_PR = 0,
                   land_regrow = NULL) {
 
-  out_all = list()
-  for(s in 1:sims) {
+  #stop()
+#  out_all = list()
+  registerDoParallel(cores=6)
+  
+  out_all = foreach(s = 1:sims, .export=c('gmse','gmse_apply','gmse_apply_summary'), .packages='GMSE') %dopar% {
     M = list()
     resXY = list()
     budgets_base = list()
@@ -75,7 +78,8 @@ gmse_sims = function(sims = 1, yrs = 10, save_all = FALSE, save_resXY = TRUE, sa
     budgets_bonus[[1]] = M[[1]]$AGENTS[,26]
     yields[[1]] = M[[1]]$AGENTS[,16]
     
-    for(i in 2:yrs) {
+    i=2
+    while(i <= yrs) {
       print(sprintf("Simulation %d/%d, step %d/%d", s, sims, i, yrs))
       m_new = try({gmse_apply(get_res = "Full", old_list = M[[i-1]])}, silent = T)
       if(class(m_new)!="list") break
@@ -86,20 +90,24 @@ gmse_sims = function(sims = 1, yrs = 10, save_all = FALSE, save_resXY = TRUE, sa
       budgets_base[[i]] = M[[i]]$AGENTS[,17]
       budgets_bonus[[i]] = M[[i]]$AGENTS[,26]
       yields[[i]] = M[[i]]$AGENTS[,16]
+      i = i+1
     }
     
-    if(!save_all) {
-      out_all[[s]] = list(summary = out, paras = paras)
-      if(save_resXY) out_all[[s]]$resXY = resXY
-      if(save_budgets) out_all[[s]]$budgets_base = list.to.df(budgets_base)
-      if(save_budgets) out_all[[s]]$budgets_bonus = list.to.df(budgets_bonus)
-      if(save_yields) out_all[[s]]$yields = list.to.df(yields)
-    } else {
-      out_all[[s]] = list(all = M, summary = out, paras = paras)  
-    }
+    # if(!save_all) {
+    #   out_all[[s]] = list(summary = out, paras = paras)
+    #   if(save_resXY) out_all[[s]]$resXY = resXY
+    #   if(save_budgets) out_all[[s]]$budgets_base = list.to.df(budgets_base)
+    #   if(save_budgets) out_all[[s]]$budgets_bonus = list.to.df(budgets_bonus)
+    #   if(save_yields) out_all[[s]]$yields = list.to.df(yields)
+    # } else {
+    #   list(all = M, summary = out, paras = paras)  
+    # }
+     
+    #rm(M, out, budgets_base, budgets_bonus, yields, resXY)
+    #out_all
+    #gc()
     
-    rm(M, out, budgets_base, budgets_bonus, yields, resXY)
-    gc()
+    list(summary = out, paras = paras, resXY = resXY, budgets_bonus = budgets_bonus, yields = yields)
   }
   
   return(out_all)

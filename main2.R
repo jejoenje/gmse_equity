@@ -1,11 +1,17 @@
 library(GMSE)
 library(parallel)
+library(foreach)
+library(doParallel)
 source("gmse_sims.R")
 
-dat = gmse_sims(sims = 10, yrs = 10, save_yields = TRUE, save_budgets = TRUE, RESOURCE_INI = 1000, 
+dat = gmse_sims(sims = 10, yrs = 10, 
+                #save_yields = TRUE, 
+                #save_budgets = TRUE, 
+                #save_all = TRUE,
+                RESOURCE_INI = 1000, 
                 CONSUME_SURV = 2, CONSUME_REPR = 3, TIMES_FEEDING = 6, REMOVE_PR = 0,
                 LAND_OWNERSHIP = TRUE, SCARING = TRUE, TEND_CROPS = TRUE, TEND_CROP_YLD = 0.2, USR_YLD_BUDGET = 0.25,
-                STAKEHOLDERS = 24, USER_BUDGET = 1000, OWNERSHIP_VAR = 0, 
+                STAKEHOLDERS = 24, USER_BUDGET = 1, OWNERSHIP_VAR = 0, 
                 land_regrow = NULL)
 t_length = max(unlist(lapply(dat, function(x) nrow(x$summary))))
 
