@@ -11,7 +11,7 @@ cl = makeCluster(6)
 registerDoParallel(cl = cl)
 
 YRS = 10
-SIMS = 10
+SIMS = 50
 
 single_sim = function() {
   

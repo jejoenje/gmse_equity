@@ -4,10 +4,12 @@ library(GMSE)
 library(parallel)
 library(doParallel)
 library(foreach)
-registerDoParallel(cores=6)
+
+cl = makeCluster(6)
+registerDoParallel(cl = cl)
 
 YRS = 10
-SIMS = 10
+SIMS = 50
 
 results <- foreach(i=1:SIMS, .export=c('gmse'), .packages='GMSE') %dopar% {
   
@@ -32,7 +34,7 @@ results <- foreach(i=1:SIMS, .export=c('gmse'), .packages='GMSE') %dopar% {
 yhi = ceiling(max(unlist(lapply(results, function(x) max(gmse_summary(x)$resource[,2]))))*1.1)
 ylo = floor(min(unlist(lapply(results, function(x) min(gmse_summary(x)$resource[,2]))))*0.9)
 
-par(mfrow=c(1,1))
+par(mfrow=c(1,2))
 plot(1:YRS, 1:YRS, ylim = c(ylo,yhi), type = "n")
 lapply(results, function(x) lines(gmse_summary(x)$resource[,2]))
 
