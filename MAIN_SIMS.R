@@ -5,47 +5,90 @@ library(parallel)
 library(doParallel)
 library(foreach)
 
-YRS = 10
-SIMS = 10
+YRS = 20
+SIMS = 100
 
-STAKEHOLDERS = c(8,16)
+par(mfrow=c(1,1))
 
-par(mfrow=c(1,2))
+list.to.df = function(l) {
+  return(data.frame(matrix(unlist(l), nrow=length(l), byrow=T)))
+}
 
-for(k in 1:length(STAKEHOLDERS)) {
+### Extracts JUST the resource positions for each element of a gmse sims list,
+###  i.e. returns a list of lists, of resource positions per time step per sim:
+get_res_pos = function(gmse_sims_list) {
+  lapply(gmse_sims_list, function(x) { lapply(x$resource, function(y) y[,c(1,5,6)]) } )
+}
+
+OUT = list()
+
+#PARS = expand.grid(STAKEHOLDERS = 12, USR_YLD_BUDGET = seq(0,0.45,0.05), OWNERSHIP_VAR = seq(0.1,1,0.1))
+PARS = expand.grid(TIME_MAX = YRS,
+                   RESOURCE_INI = 1000,
+                   CONSUME_SURV = 2,
+                   CONSUME_REPR = 3,
+                   TIMES_FEEDING = 6,
+                   REMOVE_PR = 0.1,
+                   LAND_OWNERSHIP = TRUE,
+                   SCARING = TRUE,
+                   TEND_CROPS = TRUE,
+                   TEND_CROP_YLD = 0.2,
+                   USR_YLD_BUDGET = seq(0,0.45,0.05),
+                   STAKEHOLDERS = 12, 
+                   USER_BUDGET = 1000,
+                   OWNERSHIP_VAR = seq(0,0.9,0.1)
+                   )
+
+for(k in 1:nrow(PARS)) {
+  #cat(sprintf("\n"), file = "foreach_log.txt", append = TRUE)
+  cat(sprintf("\n%s - parameter set %d / %s.. \n\n", Sys.time(), k, nrow(PARS)), file = "foreach_log.txt", append = TRUE)
+  cat(sprintf("\n%s - parameter set %d / %s..", Sys.time(), k, nrow(PARS)))
   
-  cl = makeCluster(6)
+  cl = makeCluster(6,outfile="foreach_log.txt")
   registerDoParallel(cl = cl)
-  
-  results <- foreach(i=1:SIMS, .export=c('gmse'), .packages='GMSE') %dopar% {
-    
-    gmse(time_max = YRS, 
-         RESOURCE_ini = 1000, 
-         consume_surv = 2, 
-         consume_repr = 3, 
-         times_feeding = 6, 
-         remove_pr = 0.1, 
-         land_ownership = TRUE, 
-         scaring = TRUE, 
-         tend_crops = TRUE, 
-         tend_crop_yld = 0.2, 
-         usr_yld_budget = 0.25, 
-         stakeholders = STAKEHOLDERS[k], 
-         user_budget = 1000, 
-         ownership_var = 0, plotting = FALSE)
+
+  results <- foreach(i=1:SIMS, .export=c('gmse'), .packages=c('GMSE')) %dopar% {
+    gmse(time_max = PARS$TIME_MAX[k], 
+         RESOURCE_ini = PARS$RESOURCE_INI[k], 
+         consume_surv = PARS$CONSUME_SURV[k], 
+         consume_repr = PARS$CONSUME_REPR[k], 
+         times_feeding = PARS$TIMES_FEEDING[k], 
+         remove_pr = PARS$REMOVE_PR[k], 
+         land_ownership = PARS$LAND_OWNERSHIP[k], 
+         scaring = PARS$SCARING[k], 
+         tend_crops = PARS$TEND_CROPS[k], 
+         tend_crop_yld = PARS$TEND_CROP_YLD[k], 
+         usr_yld_budget = PARS$USR_YLD_BUDGET[k], 
+         stakeholders = PARS$STAKEHOLDERS[k], 
+         user_budget = PARS$USER_BUDGET[k], 
+         ownership_var = PARS$OWNERSHIP_VAR[k], 
+         plotting = FALSE)
   }
+  
+  ### Get results summary:  
+  res_summary = list(data = lapply(results, gmse_summary))
+  ### Add resource positions to summary:
+  res_positions = get_res_pos(results)
+  for(z in 1:length(res_summary$data)) {
+    res_summary$data[[z]]$res_positions = res_positions[[z]]
+  }
+  
+  ### Get and save parameters with output list:
+  pars = as.list(as.matrix(PARS[k,]))
+  names(pars) = names(PARS)
+  res_summary$paras = pars
+  
+  rm(results, res_positions)
+  
+  OUT[[k]] = res_summary
+  
+  gc()
   
   stopCluster(cl)
   
-  ### Plot resource trajectories:
-  # Get min/max:
-  yhi = ceiling(max(unlist(lapply(results, function(x) max(gmse_summary(x)$resource[,2]))))*1.1)
-  ylo = floor(min(unlist(lapply(results, function(x) min(gmse_summary(x)$resource[,2]))))*0.9)
-  
-  plot(1:YRS, 1:YRS, ylim = c(ylo,yhi), type = "n")
-  lapply(results, function(x) lines(gmse_summary(x)$resource[,2]))
-  
 }
+
+saveRDS(OUT, "OUT.Rds")
 
 
 
