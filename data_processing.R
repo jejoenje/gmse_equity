@@ -1,9 +1,19 @@
 ### Data processing - COMBINED OUTPUTS
+
+### Sets 2-3, Varying LAND OWNERSHIP and USR_BUDGET_RNG, as well as USR_YLD_BUDGET
 source("helpers.R")
 
-set1 = readRDS("sim_set_2/OUT.Rds")
-set2 = readRDS("sim_set_3/OUT.Rds")
-set3 = readRDS("sim_set_4/OUT.Rds")
+set1a = readRDS("sim_set_2/OUT.Rds")
+set1b = readRDS("sim_set_2a/OUT.Rds")
+set1 = c(set1a, set1b)
+
+set2a = readRDS("sim_set_3/OUT.Rds")
+set2b = readRDS("sim_set_3a/OUT.Rds")
+set2 = c(set2a, set2b)
+
+set3a = readRDS("sim_set_4/OUT.Rds")
+set3b = readRDS("sim_set_4a/OUT.Rds")
+set3 = c(set3a, set3b)
 
 get_set_pars = function(x) {
   paras = as.data.frame(NULL)
@@ -59,20 +69,28 @@ set2_par = get_set_data(set = set2, paras = set2_par)
 set3_par = get_set_pars(set3)
 set3_par = get_set_data(set = set3, paras = set3_par)
 
-set1_ext_mat = xtabs(EXT_PROP ~ OWNERSHIP_VAR + USR_BUDGET_RNG, set1_par)
-filled.contour(z = set1_ext_mat, x = as.numeric(rownames(set1_ext_mat)), y = as.numeric(colnames(set1_ext_mat)),
-               xlab = "Ownership variation", ylab = "Budget variation",
-               nlevels = 10, col = rev(hcl.colors(10, "Reds")), 
-               main = "Mean extinction probability", xaxt = "n")
-
-
-meanR_matrix = xtabs(MEAN_R ~ OWNERSHIP_VAR + USR_BUDGET_RNG, set1_par)
-m = meanR_matrix
-filled.contour(z = m, x = as.numeric(rownames(m)), y = as.numeric(colnames(m)),
-               nlevels = 10, color.palette = function(n, x) scale_cols(n, x=m), 
-               main = "Mean growth rate", xaxt = "n")
-
-
+# set1_ext_mat = xtabs(EXT_PROP ~ OWNERSHIP_VAR + USR_BUDGET_RNG, set1_par)
+# filled.contour(z = set1_ext_mat, x = as.numeric(rownames(set1_ext_mat)), y = as.numeric(colnames(set1_ext_mat)),
+#                xlab = "Ownership variation", ylab = "Budget variation",
+#                nlevels = 10, col = rev(hcl.colors(10, "Reds")), 
+#                main = "Mean extinction probability", xaxt = "n")
+# 
+# meanR_matrix = xtabs(MEAN_R ~ OWNERSHIP_VAR + USR_BUDGET_RNG, set1_par)
+# m = meanR_matrix
+# filled.contour(z = m, x = as.numeric(rownames(m)), y = as.numeric(colnames(m)),
+#                nlevels = 10, color.palette = function(n, x) scale_cols(n, x=m), 
+#                main = "Mean growth rate", xaxt = "n")
+# 
+# set2_ext_mat = xtabs(EXT_PROP ~ OWNERSHIP_VAR + USR_BUDGET_RNG, set2_par)
+# filled.contour(z = set2_ext_mat, x = as.numeric(rownames(set2_ext_mat)), y = as.numeric(colnames(set2_ext_mat)),
+#                xlab = "Ownership variation", ylab = "Budget variation",
+#                nlevels = 30, col = rev(hcl.colors(30, "Reds")), 
+#                main = "Mean extinction probability", xaxt = "n")
+# meanR_matrix = xtabs(MEAN_R ~ OWNERSHIP_VAR + USR_BUDGET_RNG, set2_par)
+# m = meanR_matrix
+# filled.contour(z = m, x = as.numeric(rownames(m)), y = as.numeric(colnames(m)),
+#                nlevels = 10, color.palette = function(n, x) scale_cols(n, x=m), 
+#                main = "Mean growth rate", xaxt = "n")
 
 plot.new()
 zlo = min(set1_par$EXT_PROP,set2_par$EXT_PROP,set3_par$EXT_PROP)
@@ -87,7 +105,7 @@ xcoords = unique(set1_par$OWNERSHIP_VAR)
 ycoords = unique(set1_par$USR_BUDGET_RNG)
 surface.matrix = matrix(set1_par$EXT_PROP,nrow=length(xcoords),ncol=length(ycoords),byrow=T)
 filled.contour3(xcoords,ycoords,surface.matrix,
-                col=rev(hcl.colors(20, "Reds")),
+                col=rev(hcl.colors(30, "Reds")),
                 xlab = "",ylab = "Budget variation", cex.lab = 1.5,
                 xlim = c(min(xcoords),max(xcoords)),
                 ylim = c(min(ycoords),max(ycoords)),
@@ -100,7 +118,7 @@ xcoords = unique(set2_par$OWNERSHIP_VAR)
 ycoords = unique(set2_par$USR_BUDGET_RNG)
 surface.matrix = matrix(set2_par$EXT_PROP,nrow=length(xcoords),ncol=length(ycoords),byrow=T)
 filled.contour3(xcoords,ycoords,surface.matrix,
-                col=rev(hcl.colors(20, "Reds")),
+                col=rev(hcl.colors(30, "Reds")),
                 xlab = "Land ownership variation",ylab = "", cex.lab = 1.5,
                 xlim = c(min(xcoords),max(xcoords)),
                 ylim = c(min(ycoords),max(ycoords)),
@@ -126,6 +144,10 @@ axis(2, pretty(ycoords)[1:5], labels = NA)
 text(x=0.225,y=475,"(c) 50% yield to budget",cex = 1.5, adj = 0.5)
 
 par(new = "TRUE",plt = c(0.925,0.95,0.275,0.8),las = 1,cex.axis = 1)
+flength = sum(length(set1_par$EXT_PROP),length(set2_par$EXT_PROP),length(set3_par$EXT_PROP))
+surface.matrix = matrix(c(set1_par$EXT_PROP,set2_par$EXT_PROP,set2_par$EXT_PROP,set2_par$EXT_PROP,set2_par$EXT_PROP),flength,flength)
+xcoords = 1:flength
+ycoords = 1:flength
 filled.legend(xcoords,ycoords,surface.matrix,
               col = rev(hcl.colors(20, "Reds")),
               xlab = "",ylab = "",
@@ -183,7 +205,7 @@ axis(2, pretty(ycoords)[1:5], labels = NA)
 text(x=0.225,y=475,"(c) 50% yield to budget",cex = 1.5, adj = 0.5)
 
 par(new = "TRUE",plt = c(0.925,0.95,0.275,0.8),las = 1,cex.axis = 1)
-surface.matrix = matrix(c(set1_par$MEAN_R,set2_par$MEAN_R,set2_par$MEAN_R),300,300)
+surface.matrix = matrix(c(set1_par$MEAN_R,set2_par$MEAN_R,set3_par$MEAN_R),300,300)
 xcoords = 1:300
 ycoords = 1:300
 filled.legend(xcoords,ycoords,surface.matrix,
