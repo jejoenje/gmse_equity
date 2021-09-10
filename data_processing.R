@@ -95,10 +95,6 @@ set3_par = get_set_data(set = set3, paras = set3_par)
 plot.new()
 zlo = min(set1_par$EXT_PROP,set2_par$EXT_PROP,set3_par$EXT_PROP)
 zhi = max(set1_par$EXT_PROP,set2_par$EXT_PROP,set3_par$EXT_PROP)
-# 0.05 + 0.25 = 0.3   (0.05,0.3)
-# 0.37 + 0.25 = 0.62  (0.37,0.62)
-# 0.64 + 0.25 = 0.89  (0.64, 0.89)
-# 0.91 + 0.04 = 0.95  (0.91, 0.95)
 
 par(new = "TRUE",plt = c(0.1,0.35,0.175,0.9),las = 1,cex.axis = 1)
 xcoords = unique(set1_par$OWNERSHIP_VAR)
@@ -154,6 +150,8 @@ filled.legend(xcoords,ycoords,surface.matrix,
               xlim = c(min(xintercepts),max(xintercepts)),
               ylim = c(min(slopes),max(slopes)),
               zlim = c(zlo,zhi))
+
+
 
 
 
@@ -214,3 +212,95 @@ filled.legend(xcoords,ycoords,surface.matrix,
               xlim = c(min(xintercepts),max(xintercepts)),
               ylim = c(min(slopes),max(slopes)),
               zlim = c(zlo,zhi))
+
+
+###########################################################################################################
+
+### Set 5 - Varying landownership, budget, under different public land levels. Set 5 is public_land = 0.25.
+### Here combining with set 2 for public_land = 0.
+
+rm(list=ls())
+source("helpers.R")
+
+set2 = readRDS("sim_set_2/OUT.Rds")
+set2_par = get_set_pars(set2)
+set2_par = get_set_data(set = set2, paras = set2_par)
+unique(set2_par$OWNERSHIP_VAR)
+unique(set2_par$USR_BUDGET_RNG)
+unique(set2_par$USR_YLD_BUDGET)
+#unique(set2_par$PUBLIC_LAND)
+set2_par$PUBLIC_LAND = 0
+nrow(set2_par)
+
+set5 = readRDS("sim_set_5/OUT.Rds")
+set5_par = get_set_pars(set5)
+set5_par = get_set_data(set = set5, paras = set5_par)
+unique(set5_par$OWNERSHIP_VAR)
+unique(set5_par$USR_BUDGET_RNG)
+unique(set5_par$USR_YLD_BUDGET)
+unique(set5_par$PUBLIC_LAND)
+nrow(set5_par)
+
+plot.new()
+zlo = min(set2_par$EXT_PROP,set5_par$EXT_PROP)
+zhi = max(set2_par$EXT_PROP,set5_par$EXT_PROP)
+
+par(new = "TRUE",plt = c(0.1,0.45,0.175,0.9),las = 1,cex.axis = 1)
+xcoords = unique(set2_par$OWNERSHIP_VAR)
+ycoords = unique(set2_par$USR_BUDGET_RNG)
+surface.matrix = matrix(set2_par$EXT_PROP,nrow=length(xcoords),ncol=length(ycoords),byrow=T)
+filled.contour3(xcoords,ycoords,surface.matrix,
+                col = rev(hcl.colors(25, "Reds")),
+                xlab = "",ylab = "Budget variation", cex.lab = 1.5,
+                xlim = c(min(xcoords),max(xcoords)),
+                ylim = c(min(ycoords),max(ycoords)),
+                zlim = c(zlo,zhi))
+par(xpd = NA)
+text(x=0.225,y=475,"(a) No public land",cex = 1.5, adj =0.5)
+
+par(new = "TRUE",plt = c(0.5,0.85,0.175,0.9),las = 1,cex.axis = 1)
+xcoords = unique(set5_par$OWNERSHIP_VAR)
+ycoords = unique(set5_par$USR_BUDGET_RNG)
+surface.matrix = matrix(set5_par$EXT_PROP,nrow=length(xcoords),ncol=length(ycoords),byrow=T)
+filled.contour3(xcoords,ycoords,surface.matrix,
+                col = rev(hcl.colors(25, "Reds")),
+                xlab = "",ylab = "", cex.lab = 1.5,
+                xlim = c(min(xcoords),max(xcoords)),
+                ylim = c(min(ycoords),max(ycoords)),
+                zlim = c(zlo,zhi), axes = FALSE)
+box()
+axis(1, at = seq(range(round(xcoords,1))[1],range(round(xcoords,1))[2],0.1))
+axis(2, pretty(ycoords)[1:5], labels = NA)
+par(xpd = NA)
+text(x=0.225,y=475,"(b) 25% public land",cex = 1.5, adj =0.5)
+
+
+plot.new()
+zlo = min(set2_par$MEAN_R,set5_par$MEAN_R)
+zhi = max(set2_par$MEAN_R,set5_par$MEAN_R)
+
+par(new = "TRUE",plt = c(0.1,0.45,0.175,0.9),las = 1,cex.axis = 1)
+xcoords = unique(set2_par$OWNERSHIP_VAR)
+ycoords = unique(set2_par$USR_BUDGET_RNG)
+surface.matrix = matrix(set2_par$MEAN_R,nrow=length(xcoords),ncol=length(ycoords),byrow=T)
+filled.contour3(xcoords,ycoords,surface.matrix,
+                color.palette = function(n, x) scale_cols(n, x=surface.matrix),
+                xlab = "",ylab = "Budget variation", cex.lab = 1.5,
+                xlim = c(min(xcoords),max(xcoords)),
+                ylim = c(min(ycoords),max(ycoords)),
+                zlim = c(zlo,zhi))
+par(xpd = NA)
+text(x=0.225,y=475,"(a) No public land",cex = 1.5, adj =0.5)
+
+par(new = "TRUE",plt = c(0.5,0.85,0.175,0.9),las = 1,cex.axis = 1)
+xcoords = unique(set5_par$OWNERSHIP_VAR)
+ycoords = unique(set5_par$USR_BUDGET_RNG)
+surface.matrix = matrix(set5_par$MEAN_R,nrow=length(xcoords),ncol=length(ycoords),byrow=T)
+filled.contour3(xcoords,ycoords,surface.matrix,
+                color.palette = function(n, x) scale_cols(n, x=surface.matrix),
+                xlab = "",ylab = "Budget variation", cex.lab = 1.5,
+                xlim = c(min(xcoords),max(xcoords)),
+                ylim = c(min(ycoords),max(ycoords)),
+                zlim = c(zlo,zhi))
+par(xpd = NA)
+text(x=0.225,y=475,"(b) 25% public land",cex = 1.5, adj =0.5)
